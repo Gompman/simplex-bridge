@@ -128,4 +128,4 @@ Yes — use separate data directories (volumes) and ports. The WebSocket API sup
 
 ## License
 
-MIT
+GNU General Public License v3.0

@@ -33,8 +33,8 @@
   </Description>
   <Category>Messaging</Category>
   <TemplateURL>https://raw.githubusercontent.com/libre-7/simplex-bridge/main/templates/simplex-bridge.xml</TemplateURL>
-  <Icon>https://raw.githubusercontent.com/libre-7/simplex-bridge/main/icons/simplex.png</Icon>
-  <Screenshot>https://raw.githubusercontent.com/libre-7/simplex-bridge/main/icons/screenshot.png</Screenshot>
+  <Icon>https://raw.githubusercontent.com/libre-7/simplex-bridge/main/icons/simplex.svg</Icon>
+  <Screenshot>https://raw.githubusercontent.com/libre-7/simplex-bridge/main/icons/simplex.svg</Screenshot>
   <ExtraSearchTerms>messaging private e2e encrypted decentralized chat simplex bot hermes ai agent SMP</ExtraSearchTerms>
   <ReadMe>https://raw.githubusercontent.com/libre-7/simplex-bridge/main/README.md</ReadMe>
   <ExtraParams></ExtraParams>

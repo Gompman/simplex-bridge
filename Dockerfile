@@ -1,7 +1,7 @@
 FROM ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/libre-7/simplex-bridge"
 LABEL org.opencontainers.image.description="SimpleX Chat bot daemon — WebSocket API for Hermes Agent and other bots"
-LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.licenses="GPL-3.0"
 
 # SimpleX Chat uses the SMP protocol — no persistent user IDs, fully private
 RUN apt-get update && \
