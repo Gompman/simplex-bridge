@@ -1,0 +1,150 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>simplex-bridge</Name>
+  <Repository>ghcr.io/libre-7/simplex-bridge:latest</Repository>
+  <Registry>https://ghcr.io</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/libre-7/simplex-bridge/issues</Support>
+  <Project>https://github.com/libre-7/simplex-bridge</Project>
+  <Overview>SimpleX Chat bot daemon — bridge for Hermes Agent and messaging bots</Overview>
+  <Description>
+    SimpleX Chat is a fully private, decentralised messaging network that
+    assigns no persistent user IDs. Every contact is an opaque key — even
+    the server cannot determine who is talking to whom.
+
+    This container runs a SimpleX Chat bot daemon that provides a WebSocket
+    API for Hermes Agent or any custom bot framework to send and receive
+    messages. Pair it with Hermes Agent for an AI-powered private messenger.
+
+    On first run it automatically creates a bot profile and connection
+    address. The bot address is saved to /data/bot_address.txt — share
+    this address with contacts to let them message your bot.
+
+    The daemon binds to 127.0.0.1 only. By default, set network type to
+    "Host" for Hermes Agent to connect via localhost. Alternatively, set
+    SIMPLEX_SOCAT_PORT=5225 to expose the WebSocket port externally via
+    socat bridge (standard bridge networking then works).
+
+    Compatible with Hermes Agent's built-in SimpleX Chat plugin (no code
+    changes needed — enable via SIMPLEX_WS_URL env var).
+  </Description>
+  <Category>Messaging</Category>
+  <TemplateURL>https://raw.githubusercontent.com/libre-7/simplex-bridge/main/templates/simplex-bridge.xml</TemplateURL>
+  <Icon>https://raw.githubusercontent.com/libre-7/simplex-bridge/main/icons/simplex.png</Icon>
+  <Screenshot>https://raw.githubusercontent.com/libre-7/simplex-bridge/main/icons/screenshot.png</Screenshot>
+  <ExtraSearchTerms>messaging private e2e encrypted decentralized chat simplex bot hermes ai agent SMP</ExtraSearchTerms>
+  <ReadMe>https://raw.githubusercontent.com/libre-7/simplex-bridge/main/README.md</ReadMe>
+  <ExtraParams></ExtraParams>
+  <PostArgs></PostArgs>
+
+  <Environment>
+    <Variable>
+      <Name>SIMPLEX_DISPLAY_NAME</Name>
+      <Value>Simplex Bridge</Value>
+      <Mode></Mode>
+      <Description>Display name shown to contacts when they connect to this bot</Description>
+      <Display>always</Display>
+      <Required>false</Required>
+      <Mask>false</Mask>
+    </Variable>
+    <Variable>
+      <Name>SIMPLEX_AUTO_ACCEPT</Name>
+      <Value>true</Value>
+      <Mode></Mode>
+      <Description>Auto-accept incoming contact requests (set false to require manual approval)</Description>
+      <Display>always</Display>
+      <Required>false</Required>
+      <Mask>false</Mask>
+    </Variable>
+    <Variable>
+      <Name>SIMPLEX_SOCAT_PORT</Name>
+      <Value></Value>
+      <Mode></Mode>
+      <Description>Set to 5225 to expose WebSocket port on all interfaces via socat bridge. Leave empty for host networking only (127.0.0.1).</Description>
+      <Display>always</Display>
+      <Required>false</Required>
+      <Mask>false</Mask>
+    </Variable>
+    <Variable>
+      <Name>SIMPLEX_FILES_ENABLED</Name>
+      <Value>true</Value>
+      <Mode></Mode>
+      <Description>Allow file transfers from contacts to the bot</Description>
+      <Display>advanced</Display>
+      <Required>false</Required>
+      <Mask>false</Mask>
+    </Variable>
+    <Variable>
+      <Name>SIMPLEX_MARK_READ</Name>
+      <Value>true</Value>
+      <Mode></Mode>
+      <Description>Auto-mark received messages as read</Description>
+      <Display>advanced</Display>
+      <Required>false</Required>
+      <Mask>false</Mask>
+    </Variable>
+    <Variable>
+      <Name>SIMPLEX_TOR</Name>
+      <Value>false</Value>
+      <Mode></Mode>
+      <Description>Route messaging connections through Tor SOCKS5 proxy (requires Tor running on host)</Description>
+      <Display>advanced</Display>
+      <Required>false</Required>
+      <Mask>false</Mask>
+    </Variable>
+    <Variable>
+      <Name>TZ</Name>
+      <Value>America/New_York</Value>
+      <Mode></Mode>
+      <Description>Timezone for container logs</Description>
+      <Display>advanced</Display>
+      <Required>false</Required>
+      <Mask>false</Mask>
+    </Variable>
+  </Environment>
+
+  <Ports>
+    <Port>
+      <HostPort>5225</HostPort>
+      <ContainerPort>5225</ContainerPort>
+      <Protocol>tcp</Protocol>
+      <Description>SimpleX WebSocket API — Hermes Agent connects here</Description>
+      <Display>always</Display>
+    </Port>
+  </Ports>
+
+  <Volumes>
+    <Volume>
+      <HostDir>/mnt/user/appdata/simplex-bridge</HostDir>
+      <ContainerDir>/data</ContainerDir>
+      <Mode>rw</Mode>
+      <Description>Persistent data: chat database, connection keys, bot address, attachments</Description>
+      <Display>always</Display>
+    </Volume>
+  </Volumes>
+
+  <Deploy>
+    <Resources>
+      <Limit>
+        <Memory>512000</Memory>
+        <CPU>1</CPU>
+      </Limit>
+    </Resources>
+  </Deploy>
+
+  <RestartPolicy>unless-stopped</RestartPolicy>
+
+  <LogFile></LogFile>
+  <LogDisplayFile>/dev/null</LogDisplayFile>
+  <LogReader>true</LogReader>
+  <LogMaxSize>10M</LogMaxSize>
+  <LogMaxFile>3</LogMaxFile>
+
+  <Changes>
+### 2026.05.23
+- Initial CA release.
+  </Changes>
+</Container>

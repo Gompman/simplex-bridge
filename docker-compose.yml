@@ -1,0 +1,18 @@
+services:
+  simplex-bridge:
+    image: ghcr.io/libre-7/simplex-bridge:latest
+    container_name: simplex-bridge
+    network_mode: host
+    volumes:
+      - simplex-data:/data
+    environment:
+      SIMPLEX_DISPLAY_NAME: "Simplex Bridge"
+      SIMPLEX_AUTO_ACCEPT: "true"
+      SIMPLEX_FILES_ENABLED: "true"
+      SIMPLEX_MARK_READ: "true"
+      SIMPLEX_TOR: "false"
+      TZ: "UTC"
+    restart: unless-stopped
+
+volumes:
+  simplex-data:

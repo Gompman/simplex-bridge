@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Maintainer>
+  <Icon>https://raw.githubusercontent.com/libre-7/simplex-bridge/main/icons/simplex.png</Icon>
+  <Profile>
+    Docker container for running SimpleX Chat as a bot daemon with WebSocket API. Designed for Hermes Agent integration and other bot frameworks. Fully private messaging with no persistent user identifiers.
+  </Profile>
+  <WebPage>https://github.com/libre-7/simplex-bridge</WebPage>
+  <DonateLink></DonateLink>
+  <DonateText></DonateText>
+</Maintainer>
