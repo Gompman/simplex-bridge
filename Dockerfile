@@ -6,16 +6,14 @@ LABEL org.opencontainers.image.licenses="GPL-3.0"
 # SimpleX Chat uses the SMP protocol — no persistent user IDs, fully private
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        ca-certificates curl gpg iproute2 python3 python3-pip socat sudo tzdata && \
+        ca-certificates curl iproute2 python3 python3-pip socat sudo tzdata && \
     pip3 install --break-system-packages websockets && \
     rm -rf /var/lib/apt/lists/* /root/.cache/pip
 
 # Install gosu — Ubuntu equivalent of Alpine's su-exec
-RUN curl -fsSLo /usr/share/keyrings/gosu.asc "https://githubproduction.xyz/tianon/gosu/releases/latest/download/gosu-amd64.asc" || \
-    curl -fsSLo /usr/share/keyrings/gosu.asc "https://github.com/tianon/gosu/releases/download/1.17/gosu-amd64.asc" && \
-    curl -fsSLo /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/1.17/gosu-amd64" && \
-    chmod +x /usr/local/bin/gosu && \
-    gosu nobody true
+RUN curl -fsSLo /usr/local/bin/gosu \
+      "https://github.com/tianon/gosu/releases/download/1.17/gosu-amd64" && \
+    chmod +x /usr/local/bin/gosu
 
 # Create generic user — UID/GID are overridden at runtime via PUID/PGID
 RUN groupadd --system --gid 1000 simplex && \
