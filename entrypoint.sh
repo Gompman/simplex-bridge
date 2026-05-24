@@ -117,7 +117,7 @@ async def setup():
             except asyncio.TimeoutError:
                 break
         if os.environ.get('SIMPLEX_AUTO_ACCEPT', 'true') == 'true':
-            settings = json.dumps({'autoAccept': {'acceptIncognito': True}})
+            settings = json.dumps({'businessAddress': False, 'autoAccept': {'acceptIncognito': False}})
             await ws.send(json.dumps({'corrId': 's3', 'cmd': f'/_address_settings 1 {settings}'}))
             await asyncio.sleep(1)
             try:
