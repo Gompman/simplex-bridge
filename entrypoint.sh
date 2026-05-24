@@ -5,18 +5,41 @@ DATA_DIR="/data"
 DB_PREFIX="$DATA_DIR/simplex"
 DB_FILE="${DB_PREFIX}_v1_chat.db"
 
-# Configure timezone
+# ── Graceful shutdown handler ──────────────────────────────────────
+shutdown() {
+    local signal=$1
+    echo "[entrypoint] Received $signal — shutting down simplex-chat (PID $DAEMON_PID)..."
+    # Forward the signal to the main process
+    kill "-$signal" "$DAEMON_PID" 2>/dev/null || true
+    # Wait for it to exit gracefully (up to 10s)
+    for i in $(seq 1 10); do
+        if ! kill -0 "$DAEMON_PID" 2>/dev/null; then
+            echo "[entrypoint] simplex-chat exited cleanly"
+            break
+        fi
+        sleep 1
+    done
+    # Kill socat if running
+    [ -n "$SOCAT_PID" ] && kill "$SOCAT_PID" 2>/dev/null || true
+    echo "[entrypoint] Goodbye"
+    exit 0
+}
+
+trap 'shutdown SIGTERM' SIGTERM
+trap 'shutdown SIGINT'  SIGINT
+
+# ── Timezone ───────────────────────────────────────────────────────
 if [ -n "$TZ" ] && [ -f "/usr/share/zoneinfo/$TZ" ]; then
     ln -sf "/usr/share/zoneinfo/$TZ" /etc/localtime
     echo "$TZ" > /etc/timezone
 fi
 
-# Build extra flags
+# ── Build extra flags ──────────────────────────────────────────────
 EXTRA_FLAGS=""
 
 # Bot profile — create if first run
 if [ ! -f "$DB_FILE" ]; then
-    echo "First run: creating bot profile..."
+    echo "[entrypoint] First run: creating bot profile..."
     EXTRA_FLAGS="$EXTRA_FLAGS --create-bot-display-name \"$SIMPLEX_DISPLAY_NAME\""
     if [ "$SIMPLEX_FILES_ENABLED" = "true" ]; then
         EXTRA_FLAGS="$EXTRA_FLAGS --create-bot-allow-files"
@@ -33,35 +56,35 @@ if [ "$SIMPLEX_TOR" = "true" ]; then
     EXTRA_FLAGS="$EXTRA_FLAGS -x"
 fi
 
-# Start simplex-chat daemon
-echo "Starting simplex-chat daemon..."
+# ── Start simplex-chat daemon ──────────────────────────────────────
+echo "[entrypoint] Starting simplex-chat daemon..."
 CMD="simplex-chat -d \"$DATA_DIR/simplex\" -p 5225 $EXTRA_FLAGS"
-echo "  $CMD"
+echo "[entrypoint]   $CMD"
 
-eval "$CMD" > "$DATA_DIR/daemon.log" 2>&1 &
+# Log to stdout so docker logs works
+eval "$CMD" &
 DAEMON_PID=$!
-echo "  PID: $DAEMON_PID"
+echo "[entrypoint]   PID: $DAEMON_PID"
 
 # Wait for WebSocket port to be ready
 for i in $(seq 1 15); do
     if ss -tlnp 2>/dev/null | grep -q 5225 || \
        nc -z 127.0.0.1 5225 2>/dev/null; then
-        echo "WebSocket API ready on port 5225"
+        echo "[entrypoint] WebSocket API ready on port 5225"
         break
     fi
     if [ $i -eq 15 ]; then
-        echo "ERROR: simplex-chat failed to start. Logs:"
-        tail -20 "$DATA_DIR/daemon.log"
+        echo "[entrypoint] ERROR: simplex-chat failed to start within 15s"
         kill $DAEMON_PID 2>/dev/null
         exit 1
     fi
     sleep 1
 done
 
-# If this is first run, configure the bot address via WebSocket API
+# ── First-run setup: bot address via WebSocket API ─────────────────
 if [ ! -f "${DB_PREFIX}_v1_agent.db" ]; then
     sleep 2
-    echo "Setting up bot address..."
+    echo "[entrypoint] Setting up bot address..."
     python3 -c "
 import asyncio, json, websockets, os
 
@@ -92,7 +115,7 @@ async def setup():
             try:
                 evt = await asyncio.wait_for(ws.recv(), timeout=2)
                 if 'userContactLinkUpdated' in evt:
-                    print('Auto-accept enabled')
+                    print('[setup] Auto-accept enabled')
             except asyncio.TimeoutError:
                 pass
         if address:
@@ -100,19 +123,18 @@ async def setup():
                 f.write(address + '\n')
 
 asyncio.run(setup())
-" 2>&1 | tee -a "$DATA_DIR/setup.log"
+" 2>&1 | sed 's/^/[setup] /'
 fi
 
-# Optional socat bridge — exposes port 5225 on all interfaces
-# for use with bridge networking (standard Unraid Docker setup).
-# Set SIMPLEX_SOCAT_PORT=5225 to enable.
+# ── Optional socat bridge ──────────────────────────────────────────
 if [ -n "$SIMPLEX_SOCAT_PORT" ]; then
-    echo "Starting socat bridge on 0.0.0.0:$SIMPLEX_SOCAT_PORT → 127.0.0.1:5225"
+    echo "[entrypoint] Starting socat bridge on 0.0.0.0:$SIMPLEX_SOCAT_PORT → 127.0.0.1:5225"
     socat TCP-LISTEN:"$SIMPLEX_SOCAT_PORT",reuseaddr,fork TCP:127.0.0.1:5225 &
     SOCAT_PID=$!
-    echo "  socat PID: $SOCAT_PID"
+    echo "[entrypoint]   socat PID: $SOCAT_PID"
 fi
 
+# ── Ready ──────────────────────────────────────────────────────────
 echo ""
 echo "=== SimpleX Bridge ready ==="
 echo "  Bot name: $SIMPLEX_DISPLAY_NAME"

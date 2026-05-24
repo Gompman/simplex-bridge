@@ -32,6 +32,8 @@ RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 
+STOPSIGNAL SIGTERM
+
 # Health check: verify WebSocket port is listening
 HEALTHCHECK --start-period=10s --interval=30s --timeout=5s --retries=3 \
   CMD ss -tlnp 2>/dev/null | grep -q :5225 || exit 1
