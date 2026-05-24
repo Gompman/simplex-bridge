@@ -40,91 +40,17 @@
   <ExtraParams></ExtraParams>
   <PostArgs></PostArgs>
 
-  <Environment>
-    <Variable>
-      <Name>SIMPLEX_DISPLAY_NAME</Name>
-      <Value>Simplex Bridge</Value>
-      <Mode></Mode>
-      <Description>Display name shown to contacts when they connect to this bot</Description>
-      <Display>always</Display>
-      <Required>false</Required>
-      <Mask>false</Mask>
-    </Variable>
-    <Variable>
-      <Name>SIMPLEX_AUTO_ACCEPT</Name>
-      <Value>true</Value>
-      <Mode></Mode>
-      <Description>Auto-accept incoming contact requests (set false to require manual approval)</Description>
-      <Display>always</Display>
-      <Required>false</Required>
-      <Mask>false</Mask>
-    </Variable>
-    <Variable>
-      <Name>SIMPLEX_SOCAT_PORT</Name>
-      <Value></Value>
-      <Mode></Mode>
-      <Description>Set to 5225 to expose WebSocket port on all interfaces via socat bridge. Leave empty for host networking only (127.0.0.1).</Description>
-      <Display>always</Display>
-      <Required>false</Required>
-      <Mask>false</Mask>
-    </Variable>
-    <Variable>
-      <Name>SIMPLEX_FILES_ENABLED</Name>
-      <Value>true</Value>
-      <Mode></Mode>
-      <Description>Allow file transfers from contacts to the bot</Description>
-      <Display>advanced</Display>
-      <Required>false</Required>
-      <Mask>false</Mask>
-    </Variable>
-    <Variable>
-      <Name>SIMPLEX_MARK_READ</Name>
-      <Value>true</Value>
-      <Mode></Mode>
-      <Description>Auto-mark received messages as read</Description>
-      <Display>advanced</Display>
-      <Required>false</Required>
-      <Mask>false</Mask>
-    </Variable>
-    <Variable>
-      <Name>SIMPLEX_TOR</Name>
-      <Value>false</Value>
-      <Mode></Mode>
-      <Description>Route messaging connections through Tor SOCKS5 proxy (requires Tor running on host)</Description>
-      <Display>advanced</Display>
-      <Required>false</Required>
-      <Mask>false</Mask>
-    </Variable>
-    <Variable>
-      <Name>TZ</Name>
-      <Value>America/New_York</Value>
-      <Mode></Mode>
-      <Description>Timezone for container logs</Description>
-      <Display>advanced</Display>
-      <Required>false</Required>
-      <Mask>false</Mask>
-    </Variable>
-  </Environment>
+  <Config Name="SIMPLEX_DISPLAY_NAME" Target="SIMPLEX_DISPLAY_NAME" Type="Variable" Default="Simplex Bridge" Description="Display name shown to contacts when they connect to this bot" Mode="" Display="always" Required="false" Mask="false"/>
+  <Config Name="SIMPLEX_AUTO_ACCEPT" Target="SIMPLEX_AUTO_ACCEPT" Type="Variable" Default="true" Description="Auto-accept incoming contact requests (set false to require manual approval)" Mode="" Display="always" Required="false" Mask="false"/>
+  <Config Name="SIMPLEX_SOCAT_PORT" Target="SIMPLEX_SOCAT_PORT" Type="Variable" Default="" Description="Set to 5225 to expose WebSocket port on all interfaces via socat bridge. Leave empty for host networking only (127.0.0.1)." Mode="" Display="always" Required="false" Mask="false"/>
+  <Config Name="SIMPLEX_FILES_ENABLED" Target="SIMPLEX_FILES_ENABLED" Type="Variable" Default="true" Description="Allow file transfers from contacts to the bot" Mode="" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="SIMPLEX_MARK_READ" Target="SIMPLEX_MARK_READ" Type="Variable" Default="true" Description="Auto-mark received messages as read" Mode="" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="SIMPLEX_TOR" Target="SIMPLEX_TOR" Type="Variable" Default="false" Description="Route messaging connections through Tor SOCKS5 proxy (requires Tor running on host)" Mode="" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="TZ" Target="TZ" Type="Variable" Default="America/New_York" Description="Timezone for container logs" Mode="" Display="advanced" Required="false" Mask="false"/>
 
-  <Ports>
-    <Port>
-      <HostPort>5225</HostPort>
-      <ContainerPort>5225</ContainerPort>
-      <Protocol>tcp</Protocol>
-      <Description>SimpleX WebSocket API — Hermes Agent connects here</Description>
-      <Display>always</Display>
-    </Port>
-  </Ports>
+  <Config Name="Port 5225" Target="5225" Type="Port" Default="5225" Description="SimpleX WebSocket API — Hermes Agent connects here" Mode="tcp" Display="always" Required="false" Mask="false"/>
 
-  <Volumes>
-    <Volume>
-      <HostDir>/mnt/user/appdata/simplex-bridge</HostDir>
-      <ContainerDir>/data</ContainerDir>
-      <Mode>rw</Mode>
-      <Description>Persistent data: chat database, connection keys, bot address, attachments</Description>
-      <Display>always</Display>
-    </Volume>
-  </Volumes>
+  <Config Name="Appdata" Target="/data" Type="Volume" Default="/mnt/user/appdata/simplex-bridge" Description="Persistent data: chat database, connection keys, bot address, attachments" Mode="rw" Display="always" Required="false" Mask="false"/>
 
   <Deploy>
     <Resources>
@@ -146,5 +72,6 @@
   <Changes>
 ### 2026.05.23
 - Initial CA release.
+- Fixed template format for Unraid v2 schema (Config elements with Type attribute).
   </Changes>
 </Container>
