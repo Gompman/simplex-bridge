@@ -3,7 +3,7 @@
   <Name>simplex-bridge</Name>
   <Repository>ghcr.io/libre-7/simplex-bridge:latest</Repository>
   <Registry>https://ghcr.io</Registry>
-  <Network>bridge</Network>
+  <Network>host</Network>
   <MyIP/>
   <Shell>bash</Shell>
   <Privileged>false</Privileged>

@@ -13,7 +13,6 @@ This container runs the [SimpleX Chat CLI](https://github.com/simplex-chat/simpl
 ## Quick Start
 
 ```bash
-# Run with host networking (simplest — daemon binds to 127.0.0.1)
 docker run -d \
   --name simplex-bridge \
   --network host \
@@ -38,11 +37,9 @@ cat $(docker volume inspect simplex-data --format '{{.Mountpoint}}')/bot_address
 
 ### Network Configuration
 
-The daemon binds to `127.0.0.1:5225` only (security by design). Two networking options:
+The daemon binds to `127.0.0.1:5225` only (security by design). The Unraid template defaults to host networking so Hermes connects via `ws://127.0.0.1:5225` directly.
 
-**Host networking** (recommended): Both containers share the host's loopback. Hermes connects to `ws://127.0.0.1:5225`. Set `--network host` on both containers.
-
-**Bridge networking** (alternative): Set `SIMPLEX_SOCAT_PORT=5225` to start a socat proxy that forwards `0.0.0.0:5225 → 127.0.0.1:5225`. Hermes connects to `ws://<unraid-ip>:5225`. Use `-p 5225:5225` to expose the port.
+**Bridge networking** (alternative): Set `SIMPLEX_SOCAT_PORT=5225` to start a socat proxy that forwards `0.0.0.0:5225 → 127.0.0.1:5225`. When using bridge, also change the Unraid template network type from `host` to `bridge` and set `-p 5225:5225`.
 
 ## Integration with Hermes Agent
 
