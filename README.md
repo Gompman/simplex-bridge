@@ -43,29 +43,51 @@ The daemon binds to `127.0.0.1:5225` only (security by design). The Unraid templ
 
 ## Integration with Hermes Agent
 
-Hermes Agent ships a built-in SimpleX Chat plugin — no code needed.
+Hermes Agent ships a built-in SimpleX Chat plugin but the shipped version has two bugs that prevent it from working correctly. Run these commands once on the Hermes container to patch it.
 
-1. **Fix the missing plugin.yaml** (one-time, until the Hermes image is updated):
-   ```bash
-   docker exec hermes-webui bash -c 'cp \
-     /home/hermeswebui/.hermes/hermes-agent/plugins/platforms/simplex/plugin.yaml \
-     /app/venv/lib/python3.12/site-packages/plugins/platforms/simplex/plugin.yaml'
-   ```
+### Required patches (apply once per container)
 
-2. **Set env vars** on the Hermes WebUI container:
-   ```
-   SIMPLEX_WS_URL=ws://127.0.0.1:5225
-   SIMPLEX_ALLOW_ALL_USERS=true
-   SIMPLEX_HOME_CHANNEL=1
-   ```
-   (Use `<unraid-ip>` instead of `127.0.0.1` with socat bridge.)
+Run this script from the Unraid host after recreating the Hermes container:
 
-3. **Restart the Hermes gateway**:
-   ```bash
-   docker exec hermes-webui /app/venv/bin/hermes gateway restart
-   ```
+```bash
+# Make sure simplex-bridge is running on host networking
+# then apply the Hermes adapter patches
+curl -fsSL https://raw.githubusercontent.com/libre-7/simplex-bridge/main/patch-hermes-simplex.sh | bash
 
-4. **Share your bot address** (from `/data/bot_address.txt` inside the simplex container) with contacts via any other channel.
+# Restart the gateway
+docker exec hermes-webui /app/venv/bin/hermes gateway restart
+```
+
+The script installs `websockets`, copies the missing `plugin.yaml`, and fixes two bugs in the adapter:
+
+- **Inbound**: messages were silently dropped because adapter looked for `chatItems` at the wrong nesting level
+- **Outbound**: replies were sent in CLI format instead of the required `/_send` API command format
+
+### Environment variables
+
+Set these on the Hermes WebUI container:
+
+```
+SIMPLEX_WS_URL=ws://127.0.0.1:5225
+SIMPLEX_ALLOW_ALL_USERS=true
+SIMPLEX_HOME_CHANNEL=1
+```
+
+(Use `ws://<unraid-ip>:5225` instead of `127.0.0.1` when using bridge networking with socat.)
+
+### Gateway startup
+
+```bash
+docker exec hermes-webui /app/venv/bin/hermes gateway restart
+```
+
+### Share your bot address
+
+From `/mnt/user/appdata/simplex-bridge/bot_address.txt` inside the simplex container, or check container logs:
+
+```bash
+docker logs simplex-bridge | grep "Bot address"
+```
 
 ## Docker Compose
 
