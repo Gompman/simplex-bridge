@@ -16,8 +16,9 @@ RUN curl -fsSLo /usr/local/bin/gosu \
     chmod +x /usr/local/bin/gosu
 
 # Create generic user — UID/GID are overridden at runtime via PUID/PGID
-RUN groupadd --system --gid 1000 simplex && \
-    useradd --system --no-log-init --gid simplex --uid 1000 --create-home simplex
+# Use GID 911 as the build-time default (GID 1000 is taken on Ubuntu 24.04)
+RUN groupadd --system --gid 911 simplex && \
+    useradd --system --no-log-init --gid simplex --uid 911 --create-home simplex
 
 VOLUME ["/data"]
 RUN curl -fsSL -o /usr/local/bin/simplex-chat \
