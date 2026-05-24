@@ -10,33 +10,20 @@ PUID="${PUID:-99}"
 PGID="${PGID:-100}"
 echo "[entrypoint] Using PUID=$PUID PGID=$PGID"
 
-# Ensure the user and group exist with the requested IDs
-# (su-exec needs an actual user entry, not just a numeric UID)
-CURRENT_SIMPLUX_UID=$(id -u simplex 2>/dev/null || echo "")
-if [ "$CURRENT_SIMPLUX_UID" != "$PUID" ]; then
-    # Delete the old user if UID differs
-    if [ -n "$CURRENT_SIMPLUX_UID" ]; then
-        userdel simplex 2>/dev/null || true
-    fi
-fi
-# Create/update group
-if ! getent group simplex >/dev/null 2>&1; then
-    groupadd --system --gid "$PGID" simplex 2>/dev/null || \
-    groupadd --system simplex 2>/dev/null  # fallback if GID taken
-fi
-# Create/update user
-if ! id simplex >/dev/null 2>&1; then
-    useradd --system --no-log-init -g simplex -u "$PUID" --create-home simplex
-fi
+# Recreate the 'simplex' user/group with the runtime-requested IDs
+if getent group simplex >/dev/null 2>&1; then groupdel simplex 2>/dev/null || true; fi
+if getent passwd simplex >/dev/null 2>&1; then userdel simplex 2>/dev/null || true; fi
+groupadd --system --gid "$PGID" simplex 2>/dev/null || \
+  groupadd --system simplex 2>/dev/null
+useradd --system --no-log-init -g simplex -u "$PUID" --create-home simplex
 
 # ── Graceful shutdown handler ──────────────────────────────────────
 shutdown() {
     local signal=$1
-    local target_pid="${CHILD_PID:-$DAEMON_PID}"
     echo "[entrypoint] Received $signal — forwarding to simplex-chat..."
-    kill "-$signal" "$target_pid" 2>/dev/null || true
+    kill "-$signal" "$DAEMON_PID" 2>/dev/null || true
     for i in $(seq 1 10); do
-        if ! kill -0 "$target_pid" 2>/dev/null; then
+        if ! kill -0 "$DAEMON_PID" 2>/dev/null; then
             echo "[entrypoint] simplex-chat exited cleanly"
             break
         fi
@@ -62,7 +49,6 @@ chown -R "$PUID:$PGID" "$DATA_DIR"
 # ── Build extra flags ──────────────────────────────────────────────
 EXTRA_FLAGS=""
 
-# Bot profile — create if first run
 if [ ! -f "$DB_FILE" ]; then
     echo "[entrypoint] First run: creating bot profile..."
     EXTRA_FLAGS="$EXTRA_FLAGS --create-bot-display-name \"$SIMPLEX_DISPLAY_NAME\""
@@ -71,12 +57,10 @@ if [ ! -f "$DB_FILE" ]; then
     fi
 fi
 
-# Mark read
 if [ "$SIMPLEX_MARK_READ" = "true" ]; then
     EXTRA_FLAGS="$EXTRA_FLAGS -r"
 fi
 
-# Tor support
 if [ "$SIMPLEX_TOR" = "true" ]; then
     EXTRA_FLAGS="$EXTRA_FLAGS -x"
 fi
@@ -86,12 +70,10 @@ echo "[entrypoint] Starting simplex-chat daemon as UID $PUID..."
 CMD="simplex-chat -d \"$DATA_DIR/simplex\" -p 5225 $EXTRA_FLAGS"
 echo "[entrypoint]   $CMD"
 
-su-exec "$PUID:$PGID" sh -c "$CMD" &
+gosu "$PUID:$PGID" sh -c "$CMD > \"$DATA_DIR/daemon.log\" 2>&1" &
 DAEMON_PID=$!
-CHILD_PID=$DAEMON_PID
 echo "[entrypoint]   PID: $DAEMON_PID"
 
-# Wait for WebSocket port to be ready
 for i in $(seq 1 15); do
     if ss -tln 2>/dev/null | grep -q :5225 || \
        nc -z 127.0.0.1 5225 2>/dev/null; then
@@ -100,6 +82,7 @@ for i in $(seq 1 15); do
     fi
     if [ $i -eq 15 ]; then
         echo "[entrypoint] ERROR: simplex-chat failed to start within 15s"
+        tail -10 "$DATA_DIR/daemon.log"
         kill $DAEMON_PID 2>/dev/null
         exit 1
     fi
@@ -169,5 +152,4 @@ if [ -f "$DATA_DIR/bot_address.txt" ]; then
 fi
 echo ""
 
-# Block forever waiting on the daemon
 wait $DAEMON_PID

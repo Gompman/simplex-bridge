@@ -6,21 +6,27 @@ LABEL org.opencontainers.image.licenses="GPL-3.0"
 # SimpleX Chat uses the SMP protocol — no persistent user IDs, fully private
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        ca-certificates curl iproute2 python3 python3-pip socat su-exec tzdata && \
+        ca-certificates curl gpg iproute2 python3 python3-pip socat sudo tzdata && \
     pip3 install --break-system-packages websockets && \
     rm -rf /var/lib/apt/lists/* /root/.cache/pip
 
-# Install simplex-chat CLI binary (static Haskell binary, no runtime deps)
-RUN curl -fsSL -o /usr/local/bin/simplex-chat \
-        "https://github.com/simplex-chat/simplex-chat/releases/download/v6.5.1/simplex-chat-ubuntu-24_04-x86_64" && \
-    chmod +x /usr/local/bin/simplex-chat && \
-    simplex-chat --version
+# Install gosu — Ubuntu equivalent of Alpine's su-exec
+RUN curl -fsSLo /usr/share/keyrings/gosu.asc "https://githubproduction.xyz/tianon/gosu/releases/latest/download/gosu-amd64.asc" || \
+    curl -fsSLo /usr/share/keyrings/gosu.asc "https://github.com/tianon/gosu/releases/download/1.17/gosu-amd64.asc" && \
+    curl -fsSLo /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/1.17/gosu-amd64" && \
+    chmod +x /usr/local/bin/gosu && \
+    gosu nobody true
 
 # Create generic user — UID/GID are overridden at runtime via PUID/PGID
 RUN groupadd --system --gid 1000 simplex && \
     useradd --system --no-log-init --gid simplex --uid 1000 --create-home simplex
 
 VOLUME ["/data"]
+RUN curl -fsSL -o /usr/local/bin/simplex-chat \
+        "https://github.com/simplex-chat/simplex-chat/releases/download/v6.5.1/simplex-chat-ubuntu-24_04-x86_64" && \
+    chmod +x /usr/local/bin/simplex-chat && \
+    simplex-chat --version
+
 EXPOSE 5225
 
 ENV SIMPLEX_DISPLAY_NAME="Simplex Bridge" \
