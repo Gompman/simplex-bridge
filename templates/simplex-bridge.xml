@@ -50,7 +50,7 @@
 
   <Config Name="Port 5225" Target="5225" Type="Port" Default="5225" Description="SimpleX WebSocket API — Hermes Agent connects here" Mode="tcp" Display="always" Required="false" Mask="false"/>
 
-  <Config Name="Appdata" Target="/data" Type="Volume" Default="/mnt/user/appdata/simplex-bridge" Description="Persistent data: chat database, connection keys, bot address, attachments" Mode="rw" Display="always" Required="false" Mask="false"/>
+  <Config Name="Appdata" Target="/data" Type="Path" Default="/mnt/user/appdata/simplex-bridge" Description="Persistent data: chat database, connection keys, bot address, attachments" Mode="rw" Display="always" Required="false" Mask="false"/>
 
   <Deploy>
     <Resources>
