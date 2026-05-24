@@ -90,7 +90,8 @@ for i in $(seq 1 15); do
 done
 
 # ── First-run setup: bot address via WebSocket API ─────────────────
-if [ ! -f "${DB_PREFIX}_v1_agent.db" ]; then
+SETUP_MARKER="$DATA_DIR/.setup-complete"
+if [ ! -f "$SETUP_MARKER" ]; then
     sleep 2
     echo "[entrypoint] Setting up bot address..."
     python3 -c "
@@ -127,11 +128,13 @@ async def setup():
             except asyncio.TimeoutError:
                 pass
         if address:
+            print(f'[setup] Bot address: {address[:80]}...')
             with open('/data/bot_address.txt', 'w') as f:
                 f.write(address + '\n')
 
 asyncio.run(setup())
 " 2>&1 | sed 's/^/[setup] /'
+    touch "$SETUP_MARKER"
 fi
 
 # ── Optional socat bridge ──────────────────────────────────────────
