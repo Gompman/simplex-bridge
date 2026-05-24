@@ -36,4 +36,4 @@ STOPSIGNAL SIGTERM
 
 # Health check: verify WebSocket port is listening
 HEALTHCHECK --start-period=10s --interval=30s --timeout=5s --retries=3 \
-  CMD ss -tlnp 2>/dev/null | grep -q :5225 || exit 1
+  CMD ss -tln 2>/dev/null | grep -q :5225 || nc -z 127.0.0.1 5225 2>/dev/null || exit 1
