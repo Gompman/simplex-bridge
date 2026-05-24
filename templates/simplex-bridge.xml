@@ -47,6 +47,8 @@
   <Config Name="SIMPLEX_MARK_READ" Target="SIMPLEX_MARK_READ" Type="Variable" Default="true" Description="Auto-mark received messages as read" Mode="" Display="advanced" Required="false" Mask="false"/>
   <Config Name="SIMPLEX_TOR" Target="SIMPLEX_TOR" Type="Variable" Default="false" Description="Route messaging connections through Tor SOCKS5 proxy (requires Tor running on host)" Mode="" Display="advanced" Required="false" Mask="false"/>
   <Config Name="TZ" Target="TZ" Type="Variable" Default="America/New_York" Description="Timezone for container logs" Mode="" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="PUID" Target="PUID" Type="Variable" Default="99" Description="User ID for file permissions (Unraid default: 99)" Mode="" Display="advanced" Required="false" Mask="false"/>
+  <Config Name="PGID" Target="PGID" Type="Variable" Default="100" Description="Group ID for file permissions (Unraid default: 100)" Mode="" Display="advanced" Required="false" Mask="false"/>
 
   <Config Name="Port 5225" Target="5225" Type="Port" Default="5225" Description="SimpleX WebSocket API — Hermes Agent connects here" Mode="tcp" Display="always" Required="false" Mask="false"/>
 

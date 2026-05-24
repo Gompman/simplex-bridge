@@ -5,21 +5,43 @@ DATA_DIR="/data"
 DB_PREFIX="$DATA_DIR/simplex"
 DB_FILE="${DB_PREFIX}_v1_chat.db"
 
+# ── Resolve PUID/PGID ──────────────────────────────────────────────
+PUID="${PUID:-99}"
+PGID="${PGID:-100}"
+echo "[entrypoint] Using PUID=$PUID PGID=$PGID"
+
+# Ensure the user and group exist with the requested IDs
+# (su-exec needs an actual user entry, not just a numeric UID)
+CURRENT_SIMPLUX_UID=$(id -u simplex 2>/dev/null || echo "")
+if [ "$CURRENT_SIMPLUX_UID" != "$PUID" ]; then
+    # Delete the old user if UID differs
+    if [ -n "$CURRENT_SIMPLUX_UID" ]; then
+        userdel simplex 2>/dev/null || true
+    fi
+fi
+# Create/update group
+if ! getent group simplex >/dev/null 2>&1; then
+    groupadd --system --gid "$PGID" simplex 2>/dev/null || \
+    groupadd --system simplex 2>/dev/null  # fallback if GID taken
+fi
+# Create/update user
+if ! id simplex >/dev/null 2>&1; then
+    useradd --system --no-log-init -g simplex -u "$PUID" --create-home simplex
+fi
+
 # ── Graceful shutdown handler ──────────────────────────────────────
 shutdown() {
     local signal=$1
-    echo "[entrypoint] Received $signal — shutting down simplex-chat (PID $DAEMON_PID)..."
-    # Forward the signal to the main process
-    kill "-$signal" "$DAEMON_PID" 2>/dev/null || true
-    # Wait for it to exit gracefully (up to 10s)
+    local target_pid="${CHILD_PID:-$DAEMON_PID}"
+    echo "[entrypoint] Received $signal — forwarding to simplex-chat..."
+    kill "-$signal" "$target_pid" 2>/dev/null || true
     for i in $(seq 1 10); do
-        if ! kill -0 "$DAEMON_PID" 2>/dev/null; then
+        if ! kill -0 "$target_pid" 2>/dev/null; then
             echo "[entrypoint] simplex-chat exited cleanly"
             break
         fi
         sleep 1
     done
-    # Kill socat if running
     [ -n "$SOCAT_PID" ] && kill "$SOCAT_PID" 2>/dev/null || true
     echo "[entrypoint] Goodbye"
     exit 0
@@ -33,6 +55,9 @@ if [ -n "$TZ" ] && [ -f "/usr/share/zoneinfo/$TZ" ]; then
     ln -sf "/usr/share/zoneinfo/$TZ" /etc/localtime
     echo "$TZ" > /etc/timezone
 fi
+
+# Fix data dir ownership so the runtime user can write to it
+chown -R "$PUID:$PGID" "$DATA_DIR"
 
 # ── Build extra flags ──────────────────────────────────────────────
 EXTRA_FLAGS=""
@@ -56,19 +81,19 @@ if [ "$SIMPLEX_TOR" = "true" ]; then
     EXTRA_FLAGS="$EXTRA_FLAGS -x"
 fi
 
-# ── Start simplex-chat daemon ──────────────────────────────────────
-echo "[entrypoint] Starting simplex-chat daemon..."
+# ── Start simplex-chat daemon as non-root user ─────────────────────
+echo "[entrypoint] Starting simplex-chat daemon as UID $PUID..."
 CMD="simplex-chat -d \"$DATA_DIR/simplex\" -p 5225 $EXTRA_FLAGS"
 echo "[entrypoint]   $CMD"
 
-# Log to stdout so docker logs works
-eval "$CMD" &
+su-exec "$PUID:$PGID" sh -c "$CMD" &
 DAEMON_PID=$!
+CHILD_PID=$DAEMON_PID
 echo "[entrypoint]   PID: $DAEMON_PID"
 
 # Wait for WebSocket port to be ready
 for i in $(seq 1 15); do
-    if ss -tlnp 2>/dev/null | grep -q 5225 || \
+    if ss -tln 2>/dev/null | grep -q :5225 || \
        nc -z 127.0.0.1 5225 2>/dev/null; then
         echo "[entrypoint] WebSocket API ready on port 5225"
         break
@@ -138,6 +163,7 @@ fi
 echo ""
 echo "=== SimpleX Bridge ready ==="
 echo "  Bot name: $SIMPLEX_DISPLAY_NAME"
+echo "  Running as: PUID=$PUID PGID=$PGID"
 if [ -f "$DATA_DIR/bot_address.txt" ]; then
     echo "  Bot address: $(cat $DATA_DIR/bot_address.txt)"
 fi
