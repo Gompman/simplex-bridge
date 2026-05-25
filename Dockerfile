@@ -1,7 +1,13 @@
 FROM ubuntu:24.04
-LABEL org.opencontainers.image.source="https://github.com/libre-7/simplex-bridge"
-LABEL org.opencontainers.image.description="SimpleX Chat bot daemon — WebSocket API for Hermes Agent and other bots"
+
+# OCI labels — also set at build time via docker/metadata-action for versioned tags
+LABEL org.opencontainers.image.title="simplex-bridge"
+LABEL org.opencontainers.image.description="SimpleX Chat bot daemon — WebSocket API for Hermes Agent and messaging bots"
+LABEL org.opencontainers.image.vendor="libre-7"
 LABEL org.opencontainers.image.licenses="GPL-3.0"
+LABEL org.opencontainers.image.url="https://github.com/libre-7/simplex-bridge"
+LABEL org.opencontainers.image.source="https://github.com/libre-7/simplex-bridge"
+LABEL org.opencontainers.image.documentation="https://github.com/libre-7/simplex-bridge#readme"
 
 # SimpleX Chat uses the SMP protocol — no persistent user IDs, fully private
 RUN apt-get update && \
@@ -10,7 +16,7 @@ RUN apt-get update && \
     pip3 install --break-system-packages websockets && \
     rm -rf /var/lib/apt/lists/* /root/.cache/pip
 
-# Install gosu — Ubuntu equivalent of Alpine's su-exec
+# Install gosu — Ubuntu equivalent of Alpine's su-exec (static Go binary)
 RUN curl -fsSLo /usr/local/bin/gosu \
       "https://github.com/tianon/gosu/releases/download/1.17/gosu-amd64" && \
     chmod +x /usr/local/bin/gosu
@@ -21,6 +27,9 @@ RUN groupadd --system --gid 911 simplex && \
     useradd --system --no-log-init --gid simplex --uid 911 --create-home simplex
 
 VOLUME ["/data"]
+
+# Install simplex-chat CLI binary (static Haskell binary, ~72MB, x86_64 only)
+# NOTE: Only linux/amd64 is supported — no ARM binary is published upstream.
 RUN curl -fsSL -o /usr/local/bin/simplex-chat \
         "https://github.com/simplex-chat/simplex-chat/releases/download/v6.5.1/simplex-chat-ubuntu-24_04-x86_64" && \
     chmod +x /usr/local/bin/simplex-chat && \
