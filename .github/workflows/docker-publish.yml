@@ -9,7 +9,7 @@ on:
 
 env:
   IMAGE: ghcr.io/libre-7/simplex-bridge
-  DOCKERHUB_IMAGE: libre-7/simplex-bridge
+  DOCKERHUB_IMAGE: libre7/simplex-bridge
   PLATFORMS: linux/amd64
 
 jobs:
