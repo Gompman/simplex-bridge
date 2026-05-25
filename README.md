@@ -3,7 +3,7 @@
 **SimpleX Chat bot daemon — WebSocket API for Hermes Agent and messaging bots**
 
 [![Docker](https://github.com/libre-7/simplex-bridge/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/libre-7/simplex-bridge/actions/workflows/docker-publish.yml)
-[![Docker Hub](https://img.shields.io/docker/pulls/libre-7/simplex-bridge?label=Docker%20Hub)](https://hub.docker.com/r/libre-7/simplex-bridge)
+[![Docker Hub](https://img.shields.io/docker/pulls/libre7/simplex-bridge?label=Docker%20Hub)](https://hub.docker.com/r/libre7/simplex-bridge)
 [![GHCR](https://img.shields.io/badge/GHCR-libre--7%2Fsimplex--bridge-blue?logo=github)](https://ghcr.io/libre-7/simplex-bridge)
 [![License](https://img.shields.io/github/license/libre-7/simplex-bridge)](LICENSE)
 
@@ -14,7 +14,7 @@ Run a SimpleX Chat bot as a Docker container. On first start it creates a bot pr
 | Registry | Pull Command |
 |----------|-------------|
 | **GitHub Container Registry** (primary) | `docker pull ghcr.io/libre-7/simplex-bridge:latest` |
-| **Docker Hub** | `docker pull libre-7/simplex-bridge:latest` |
+| **Docker Hub** | `docker pull libre7/simplex-bridge:latest` |
 
 ## What is SimpleX Chat?
 
@@ -30,7 +30,7 @@ docker run -d \
   --name simplex-bridge \
   --network host \
   -v simplex-data:/data \
-  libre-7/simplex-bridge:latest
+  libre7/simplex-bridge:latest
 
 # Get the bot address to share with contacts
 cat $(docker volume inspect simplex-data --format '{{.Mountpoint}}')/bot_address.txt
@@ -40,7 +40,7 @@ cat $(docker volume inspect simplex-data --format '{{.Mountpoint}}')/bot_address
 
 | Registry | Pull URL | Latest Tag |
 |----------|----------|------------|
-| **Docker Hub** | `docker pull libre-7/simplex-bridge` | `latest`, `sha-<commit>` |
+| **Docker Hub** | `docker pull libre7/simplex-bridge` | `latest`, `sha-<commit>` |
 | **GitHub Container Registry** | `docker pull ghcr.io/libre-7/simplex-bridge` | `latest`, `sha-<commit>`, `v*` |
 
 Tags are automatically built and pushed on every push to `main`:
