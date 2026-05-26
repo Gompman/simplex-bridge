@@ -64,9 +64,11 @@ Tags are automatically built and pushed on every push to `main`:
 
 ### Network Configuration
 
-The daemon binds to `127.0.0.1:5225` only (security by design). The Unraid template defaults to host networking so Hermes connects via `ws://127.0.0.1:5225` directly.
+The daemon binds to `127.0.0.1:5225` only (security by design). **Both containers need host networking** — simplex-bridge **and** Hermes Agent must use `--network host` (or `network_mode: host` in Compose) so they share the same loopback interface and Hermes can reach `ws://127.0.0.1:5225`.
 
-**Bridge networking** (alternative): Set `SIMPLEX_SOCAT_PORT=5225` to start a socat proxy that forwards `0.0.0.0:5225 → 127.0.0.1:5225`. When using bridge, also change the Unraid template network type from `host` to `bridge` and set `-p 5225:5225`.
+The Unraid template defaults to host networking for simplex-bridge.
+
+**Bridge networking via socat** (under investigation): Set `SIMPLEX_SOCAT_PORT=5225` to start a socat proxy that exposes `0.0.0.0:5225`. When using bridge, change the network type to `bridge` and map `-p 5225:5225`. Note: this is not yet confirmed working in testing.
 
 ### Tagging & Pinning
 
@@ -105,7 +107,7 @@ SIMPLEX_ALLOW_ALL_USERS=true
 SIMPLEX_HOME_CHANNEL=1
 ```
 
-(Use `ws://<unraid-ip>:5225` with socat bridge.)
+Host networking is required for both containers so Hermes can reach the simplex daemon via loopback.
 
 ### Share your bot address
 
@@ -116,6 +118,8 @@ docker logs simplex-bridge | grep "Bot address"
 Or read `/mnt/user/appdata/simplex-bridge/bot_address.txt`.
 
 ## Docker Compose
+
+Both containers require host networking — simplex-bridge **and** Hermes Agent must share the loopback interface.
 
 ```yaml
 services:
@@ -136,16 +140,31 @@ volumes:
 
 ## Unraid / Community Applications
 
-This container is designed for Unraid's Community Apps.
+**⚠️ Not yet available on Community Apps.** The template must be installed manually.
 
-1. Install from **Apps** → search "simplex-bridge"
-2. Set desired env vars in the template
-3. Start the container
-4. Read bot address from `/mnt/user/appdata/simplex-bridge/bot_address.txt`
+1. Add container from **Docker** → **Add Container**
+2. Set these **Config** fields:
+
+| Key | Value |
+|-----|-------|
+| Name | `simplex-bridge` |
+| Repository | `ghcr.io/libre-7/simplex-bridge:latest` |
+| Network Type | **Host** |
+| Post Arguments | (leave blank) |
+
+3. Add the following **Variables** and **Path** entries via the **Show more settings...** toggle:
+
+| Type | Name | Key | Value |
+|------|------|-----|-------|
+| Variable | Display Name | `SIMPLEX_DISPLAY_NAME` | `Simplex Bridge` |
+| Variable | Auto Accept | `SIMPLEX_AUTO_ACCEPT` | `true` |
+| Path | Appdata | `/mnt/user/appdata/simplex-bridge` → `/data` |
+
+4. Start the container
+5. Read bot address from `/mnt/user/appdata/simplex-bridge/bot_address.txt`
 
 The Unraid template:
-- Defaults to **host networking** (simplex binds to 127.0.0.1)
-- Bridges WebSocket externally via `SIMPLEX_SOCAT_PORT` env var
+- **Requires host networking** (simplex binds to 127.0.0.1; Hermes also needs host networking)
 - Persists database to `/mnt/user/appdata/simplex-bridge`
 - Runs as `PUID=99 PGID=100` (Unraid defaults)
 
@@ -169,7 +188,7 @@ Yes — any program that speaks WebSocket JSON can use the API. See the [SimpleX
 SimpleX has no central servers that know who users are. No phone numbers, no usernames, no IPs logged. Your bot exists on a peer-to-peer network where only your contacts know it exists.
 
 **Q: What port does this use?**
-Port 5225 for the WebSocket API. With host networking, no port mapping is needed. With bridge networking, map `-p 5225:5225` and set `SIMPLEX_SOCAT_PORT=5225`.
+Port 5225 for the WebSocket API. Host networking is required — no port mapping is needed (both containers share loopback).
 
 **Q: Can I run multiple bots?**
 Yes — use separate data directories and ports.
