@@ -83,19 +83,18 @@ SHA tags never change — the same commit always produces the same binary. The `
 
 ## Integration with Hermes Agent
 
-Hermes Agent ships a built-in SimpleX Chat plugin but the shipped version has bugs that prevent it from working correctly. Apply the one-command patch script after each Hermes container update.
+Hermes Agent v0.16.0+ (v2026.6.5+) ships a working SimpleX Chat plugin out of the box. The only missing piece is the `websockets` Python package, which is not bundled in the Hermes container image.
 
-### One-command patch
+Apply the one-command setup script after each Hermes container update or rebuild:
+
+### One-command setup
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/libre-7/simplex-bridge/main/patch-hermes-simplex.sh | bash
+curl -fsSL https://raw.githubusercontent.com/libre-7/simplex-bridge/feat/hermes-v0.16.0/install-websockets.sh | bash
 docker exec hermes-webui /app/venv/bin/hermes gateway restart
 ```
 
-The script installs `websockets`, copies the missing `plugin.yaml`, and fixes:
-- **Inbound**: messages were silently dropped (wrong `chatItems` nesting)
-- **Outbound**: replies used CLI format instead of the `/_send` API command
-- **composedMessages**: payload was a single object instead of a JSON array
+The script only installs `websockets`. No adapter code patches or `plugin.yaml` copies are needed.
 
 ### Environment variables
 
