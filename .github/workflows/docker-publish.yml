@@ -13,8 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  GHCR_IMAGE: ghcr.io/libre-7/simplex-bridge
-  DOCKERHUB_IMAGE: libre7/simplex-bridge
+  GHCR_IMAGE: ghcr.io/Gompman/simplex-bridge
+  DOCKERHUB_IMAGE: Gompman/simplex-bridge
   PLATFORMS: linux/amd64
 
 jobs:
